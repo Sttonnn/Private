@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>สมุดทริปญี่ปุ่น</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Zen+Old+Mincho:wght@500;700&display=swap">
+<style>
+/* Layout: a trip booklet (旅のしおり) — compact header with countdown, tabbed sections, day "pages" stacked as cards */
+:root {
+  --paper: #f3f5f2;
+  --surface: #ffffff;
+  --ink: #1b2130;
+  --muted: #5c6677;
+  --line: #dde2de;
+  --ai: #274a7d;          /* indigo, main accent */
+  --ai-soft: #e4ebf5;
+  --shu: #c3402e;         /* vermilion, used only for warnings / today */
+  --matcha: #557544;
+  --c1: #274a7d; --c2: #8a5a9e; --c3: #c47a2c; --c4: #2f8a83; --c5: #c3402e; --c6: #6b8a3a; --c7: #7b8494;
+  --f-display: "Bai Jamjuree", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-jp: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11151c; --surface: #19202a; --ink: #e7eaef; --muted: #9aa3b3; --line: #2a3340;
+    --ai: #8fb1e6; --ai-soft: #1e2a3c; --shu: #ef7c66; --matcha: #9cc086;
+    --c1: #8fb1e6; --c2: #c39bd6; --c3: #e3a65f; --c4: #6cc4bc; --c5: #ef7c66; --c6: #a9c97a; --c7: #9aa3b3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11151c; --surface: #19202a; --ink: #e7eaef; --muted: #9aa3b3; --line: #2a3340;
+  --ai: #8fb1e6; --ai-soft: #1e2a3c; --shu: #ef7c66; --matcha: #9cc086;
+  --c1: #8fb1e6; --c2: #c39bd6; --c3: #e3a65f; --c4: #6cc4bc; --c5: #ef7c66; --c6: #a9c97a; --c7: #9aa3b3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 15px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.25; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ai); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.jp { font-family: var(--f-jp); }
+.muted { color: var(--muted); }
+
+/* header */
+.top { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end; padding-block: 28px 18px; }
+.top .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; gap: 10px; align-items: center; }
+.top .eyebrow .jp { letter-spacing: .3em; color: var(--ai); font-size: 14px; }
+.top h1 { font-size: clamp(26px, 5vw, 38px); font-weight: 700; margin-top: 4px; }
+.top .dates { color: var(--muted); margin-top: 2px; }
+.count { text-align: right; min-width: 0; }
+.count .big { font-family: var(--f-display); font-weight: 700; font-size: 40px; line-height: 1; color: var(--ai); font-variant-numeric: tabular-nums; }
+.count .lbl { font-size: 13px; color: var(--muted); }
+.count.live .big { color: var(--shu); }
+
+.season { display: flex; gap: 12px; align-items: flex-start; background: var(--ai-soft); border-radius: var(--radius); padding: 12px 14px; font-size: 14px; }
+.season .tag { font-family: var(--f-jp); font-weight: 700; color: var(--ai); font-size: 20px; line-height: 1.2; flex: none; }
+.season b { font-weight: 600; }
+
+.banner { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; color: var(--muted); }
+.banner button { margin-left: auto; }
+
+/* tabs */
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); display: flex; gap: 4px; overflow-x: auto; padding-block: 14px 10px; margin-top: 8px; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+nav.tabs a { text-decoration: none; color: var(--muted); padding: 7px 14px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+nav.tabs a:hover { color: var(--ink); background: var(--surface); }
+nav.tabs a[aria-current="page"] { background: var(--ink); color: var(--paper); }
+nav.tabs .sum { margin-left: auto; align-self: center; font-size: 13px; color: var(--muted); white-space: nowrap; padding-left: 12px; }
+
+section.view { padding-top: 22px; }
+.sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.sec-head h2 { font-size: 22px; }
+
+/* buttons & fields */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--ai); }
+.btn.primary { background: var(--ai); border-color: var(--ai); color: var(--surface); font-weight: 500; }
+.btn.danger { color: var(--shu); }
+.btn.danger.armed { background: var(--shu); color: var(--surface); border-color: var(--shu); }
+.icon-btn { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1; font-size: 16px; }
+.icon-btn:hover { color: var(--shu); background: var(--paper); }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+.field input, .field select, .field textarea, .inp {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; width: 100%; min-width: 0; color: var(--ink); font-size: 15px;
+}
+textarea { resize: vertical; }
+
+/* settings */
+details.settings { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+details.settings > summary { cursor: pointer; padding: 10px 14px; font-weight: 500; list-style: none; display: flex; gap: 8px; align-items: center; }
+details.settings > summary::-webkit-details-marker { display: none; }
+details.settings > summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
+details.settings[open] > summary::before { transform: rotate(90deg); }
+.settings-body { padding: 4px 14px 16px; display: grid; gap: 16px; }
+.grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.data-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* day cards */
+.days { display: grid; gap: 16px; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.day.today { border-color: var(--shu); }
+.day-head { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.day-no { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1; color: var(--ai); min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.day-no small { display: block; font-size: 10px; letter-spacing: .1em; color: var(--muted); font-weight: 500; text-transform: uppercase; }
+.day-meta { min-width: 0; display: grid; gap: 2px; }
+.day-date { font-weight: 600; }
+.day-date .tdy { color: var(--shu); font-size: 12px; margin-left: 6px; font-weight: 600; }
+.city-inp { border: 0; border-bottom: 1px dashed var(--line); background: transparent; padding: 0 0 1px; color: var(--muted); width: 100%; max-width: 260px; font-size: 14px; }
+.city-inp:focus { outline: none; border-bottom-color: var(--ai); color: var(--ink); }
+.day-total { text-align: right; font-size: 13px; color: var(--muted); }
+.day-total .num { color: var(--ink); font-size: 15px; display: block; }
+
+ol.items { list-style: none; margin: 0; padding: 0; }
+ol.items li { display: grid; grid-template-columns: 92px minmax(0, 1fr) 130px 104px auto; gap: 8px; align-items: start; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+ol.items li:hover { background: color-mix(in srgb, var(--ai-soft) 45%, transparent); }
+.items .t, .items .ti, .items .no, .items .ca, .items .co { border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 3px 6px; width: 100%; min-width: 0; color: var(--ink); }
+.items .t:hover, .items .ti:hover, .items .no:hover, .items .ca:hover, .items .co:hover { border-color: var(--line); }
+.items .t:focus, .items .ti:focus, .items .no:focus, .items .ca:focus, .items .co:focus { border-color: var(--ai); background: var(--surface); outline: none; }
+.items .t { font-family: var(--f-mono); font-size: 14px; color: var(--ai); }
+.items .ti { font-weight: 500; }
+.items .no { font-size: 13px; color: var(--muted); }
+.items .ca { font-size: 13px; color: var(--muted); }
+.items .co { font-family: var(--f-mono); text-align: right; font-size: 14px; }
+.items .cost-wrap { position: relative; }
+.items .cost-wrap::before { content: "¥"; position: absolute; left: 6px; top: 4px; color: var(--muted); font-size: 13px; pointer-events: none; }
+.items .acts { display: flex; gap: 2px; align-items: center; padding-top: 2px; }
+.items .acts a { color: var(--muted); text-decoration: none; font-size: 12px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); white-space: nowrap; }
+.items .acts a:hover { color: var(--ai); border-color: var(--ai); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.empty-day { padding: 14px 16px; color: var(--muted); font-size: 14px; border-bottom: 1px solid var(--line); }
+form.add { display: grid; grid-template-columns: 92px minmax(0, 1fr) 104px auto; gap: 8px; padding: 10px 16px; background: color-mix(in srgb, var(--paper) 60%, var(--surface)); }
+form.add .inp { padding: 5px 8px; font-size: 14px; }
+
+/* budget */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.stat .k { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.stat .v { font-family: var(--f-display); font-weight: 700; font-size: 24px; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.stat .s { font-size: 13px; color: var(--muted); font-family: var(--f-mono); }
+.stat.over .v { color: var(--shu); }
+.stat.ok .v { color: var(--matcha); }
+.meter { height: 8px; background: var(--paper); border-radius: 99px; overflow: hidden; margin-top: 8px; border: 1px solid var(--line); }
+.meter span { display: block; height: 100%; background: var(--ai); border-radius: 99px; }
+.meter.over span { background: var(--shu); }
+.two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.panel h3 { font-size: 16px; margin-bottom: 10px; }
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 14px; }
+.bar-track { height: 10px; background: var(--paper); border-radius: 99px; overflow: hidden; }
+.bar-track span { display: block; height: 100%; border-radius: 99px; }
+.bar-row .num { font-size: 13px; text-align: right; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.r, th.r { text-align: right; }
+form.exp { display: grid; grid-template-columns: 1.1fr 1.4fr 1fr 74px auto; gap: 8px; margin-top: 12px; }
+form.exp .inp { padding: 6px 8px; font-size: 14px; }
+.conv { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: end; }
+.conv .eq { padding-bottom: 8px; color: var(--muted); }
+.hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* checklist */
+.chk-progress { display: flex; gap: 12px; align-items: center; font-size: 14px; color: var(--muted); }
+.chk-progress .meter { flex: 1; margin: 0; max-width: 260px; }
+.chk-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.chk-groups .panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.chk-groups li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 5px 0; }
+.chk-groups li label { cursor: pointer; min-width: 0; }
+.chk-groups li.done label { color: var(--muted); text-decoration: line-through; }
+.chk-groups input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--matcha); }
+form.chk { display: grid; grid-template-columns: minmax(0, 1fr) 170px auto; gap: 8px; margin-top: 16px; }
+
+/* ideas */
+.idea-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 14px; }
+.chip .jp { color: var(--muted); margin-left: 4px; font-size: 12px; }
+.chip[aria-pressed="true"] { background: var(--ai); border-color: var(--ai); color: var(--surface); }
+.chip[aria-pressed="true"] .jp { color: inherit; opacity: .8; }
+.target { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); margin-left: auto; }
+.target select { width: auto; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card .jpn { font-family: var(--f-jp); color: var(--ai); font-size: 13px; letter-spacing: .08em; }
+.card h3 { font-size: 16px; }
+.card p { margin: 0; font-size: 14px; color: var(--muted); }
+.card .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 8px; }
+.card .foot .num { font-size: 13px; color: var(--muted); }
+.card .added { color: var(--matcha); font-size: 13px; }
+
+/* phrases */
+.phrases { margin-top: 26px; }
+.phrase-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.phrase { border-left: 3px solid var(--ai); padding: 4px 12px; }
+.phrase .jp { font-size: 17px; }
+.phrase .ro { font-family: var(--f-mono); font-size: 12px; color: var(--ai); }
+.phrase .th { font-size: 14px; color: var(--muted); }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 9px 16px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; max-width: calc(100% - 32px); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 720px) {
+  .two { grid-template-columns: 1fr; }
+  ol.items li { grid-template-columns: 54px minmax(0, 1fr) 92px; grid-template-areas: "t main acts" ". ca co"; gap: 4px 6px; padding: 8px 12px; }
+  ol.items li > .t { grid-area: t; }
+  ol.items li > div:nth-child(2) { grid-area: main; }
+  ol.items li .ca-wrap { grid-area: ca; }
+  ol.items li .cost-wrap { grid-area: co; }
+  ol.items li .acts { grid-area: acts; justify-content: flex-end; }
+  .items .t { padding: 3px 2px; }
+  form.add { grid-template-columns: 64px minmax(0, 1fr) auto; padding: 10px 12px; }
+  form.add .add-cost { grid-column: 2; }
+  form.exp { grid-template-columns: 1fr 1fr; }
+  form.exp .exp-title { grid-column: 1 / -1; }
+  form.chk { grid-template-columns: 1fr auto; }
+  form.chk .chk-text { grid-column: 1 / -1; }
+  .bar-row { grid-template-columns: 100px minmax(0, 1fr) auto; }
+  .target { margin-left: 0; }
+  nav.tabs .sum { display: none; }
+}
+@media (max-width: 480px) {
+  .top { grid-template-columns: 1fr; }
+  .count { text-align: left; display: flex; gap: 10px; align-items: baseline; }
+  .count .big { font-size: 30px; }
+  .day-head { grid-template-columns: auto 1fr; }
+  .day-total { grid-column: 1 / -1; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .day-total .num { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div style="min-width:0">
+      <div class="eyebrow"><span class="jp">旅のしおり</span><span>สมุดทริปญี่ปุ่น</span></div>
+      <h1 id="tripTitle">ทริปญี่ปุ่น</h1>
+      <div class="dates" id="tripDates"></div>
+    </div>
+    <div class="count" id="countdown"></div>
+  </header>
+
+  <div class="season" id="season"></div>
+  <div class="banner" id="sampleBanner" hidden>
+    <span>นี่คือแผนตัวอย่าง 7 วัน โตเกียว เกียวโต โอซาก้า แก้ไขต่อได้เลย หรือเริ่มทริปใหม่จากหน้าว่าง</span>
+    <button class="btn" id="startBlank" type="button">เริ่มทริปใหม่</button>
+  </div>
+
+  <details class="settings" id="settings">
+    <summary>ตั้งค่าทริป: ชื่อ วันที่ จำนวนคน งบ และอัตราแลกเปลี่ยน</summary>
+    <div class="settings-body">
+      <div class="grid-fields">
+        <label class="field">ชื่อทริป<input id="s-name" type="text"></label>
+        <label class="field">วันออกเดินทาง<input id="s-start" type="date"></label>
+        <label class="field">วันกลับ<input id="s-end" type="date"></label>
+        <label class="field">จำนวนคน<input id="s-people" type="number" min="1" step="1"></label>
+        <label class="field">งบรวม (บาท)<input id="s-budget" type="number" min="0" step="1000"></label>
+        <label class="field">1 เยน = กี่บาท<input id="s-rate" type="number" min="0" step="0.001"></label>
+      </div>
+      <div class="data-row">
+        <button class="btn" type="button" id="copyJson">คัดลอกข้อมูลทริป (JSON)</button>
+        <button class="btn" type="button" id="loadSample">โหลดแผนตัวอย่าง</button>
+        <button class="btn danger" type="button" id="resetAll">ล้างข้อมูลทั้งหมด</button>
+      </div>
+      <label class="field">นำเข้าข้อมูล: วาง JSON ที่คัดลอกไว้ แล้วกด "นำเข้า"
+        <textarea id="importBox" rows="3" placeholder='{"trip": {...}, "days": {...}}'></textarea>
+      </label>
+      <div class="data-row"><button class="btn" type="button" id="importJson">นำเข้า</button><span class="muted" style="font-size:13px">ข้อมูลบันทึกไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น ใช้ปุ่มคัดลอกเพื่อย้ายไปเครื่องอื่น</span></div>
+    </div>
+  </details>
+
+  <nav class="tabs" aria-label="ส่วนของแผน">
+    <a href="#plan" data-tab="plan">แผนรายวัน</a>
+    <a href="#budget" data-tab="budget">งบประมาณ</a>
+    <a href="#checklist" data-tab="checklist">เช็กลิสต์</a>
+    <a href="#ideas" data-tab="ideas">ไอเดียที่เที่ยว</a>
+    <span class="sum num" id="navSum"></span>
+  </nav>
+
+  <section class="view" id="view-plan">
+    <div class="sec-head"><h2>แผนรายวัน</h2><span class="muted" style="font-size:14px">แตะข้อความเพื่อแก้ไข เวลาจะเรียงให้อัตโนมัติ</span></div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="view" id="view-budget" hidden>
+    <div class="sec-head"><h2>งบประมาณ</h2><span class="muted" style="font-size:14px">รวมค่าใช้จ่ายจากแผนรายวันและรายการด้านล่าง</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="two">
+      <div class="panel">
+        <h3>แยกตามหมวด</h3>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="panel">
+        <h3>แปลงสกุลเงิน</h3>
+        <div class="conv">
+          <label class="field">เยน (¥)<input id="cv-jpy" type="number" min="0" value="1000"></label>
+          <span class="eq">=</span>
+          <label class="field">บาท (฿)<input id="cv-thb" type="number" min="0"></label>
+        </div>
+        <p class="hint" id="rateHint"></p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <h3>ค่าใช้จ่ายอื่น ๆ (ตั๋วเครื่องบิน ที่พัก ฯลฯ)</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>หมวด</th><th>รายการ</th><th class="r">จำนวน</th><th class="r">≈ บาท</th><th></th></tr></thead>
+        <tbody id="expRows"></tbody>
+      </table></div>
+      <form class="exp" id="expForm">
+        <select class="inp" id="exp-cat" aria-label="หมวด"></select>
+        <input class="inp exp-title" id="exp-title" placeholder="รายการ เช่น โรงแรมที่ชินจูกุ 3 คืน" required aria-label="รายการ">
+        <input class="inp" id="exp-amt" type="number" min="0" step="any" placeholder="จำนวนเงิน" required aria-label="จำนวนเงิน">
+        <select class="inp" id="exp-cur" aria-label="สกุลเงิน"><option value="THB">฿</option><option value="JPY">¥</option></select>
+        <button class="btn primary">เพิ่ม</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="view" id="view-checklist" hidden>
+    <div class="sec-head"><h2>เช็กลิสต์ก่อนเดินทาง</h2><div class="chk-progress" id="chkProgress"></div></div>
+    <div class="chk-groups" id="chkGroups"></div>
+    <form class="chk" id="chkForm">
+      <input class="inp chk-text" id="chk-text" placeholder="เพิ่มรายการ เช่น ยาประจำตัว" required aria-label="รายการใหม่">
+      <select class="inp" id="chk-group" aria-label="หมวด"></select>
+      <button class="btn primary">เพิ่ม</button>
+    </form>
+  </section>
+
+  <section class="view" id="view-ideas" hidden>
+    <div class="sec-head"><h2>ไอเดียที่เที่ยว</h2><span class="muted" style="font-size:14px">ราคาเป็นค่าเข้าชมโดยประมาณต่อคน</span></div>
+    <div class="idea-bar">
+      <div class="chips" id="cityChips"></div>
+      <label class="target">เพิ่มลง<select class="inp" id="targetDay"></select></label>
+    </div>
+    <div class="cards" id="ideaCards"></div>
+    <div class="phrases">
+      <div class="sec-head"><h2>ประโยคญี่ปุ่นที่ใช้บ่อย</h2></div>
+      <div class="phrase-list" id="phrases"></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "jp-trip-planner-v1";
+
+  var CATS = {
+    flight:    { label: "ตั๋วเครื่องบิน", color: "var(--c1)" },
+    hotel:     { label: "ที่พัก", color: "var(--c2)" },
+    food:      { label: "อาหาร", color: "var(--c3)" },
+    transport: { label: "เดินทางในญี่ปุ่น", color: "var(--c4)" },
+    activity:  { label: "ที่เที่ยว/ตั๋วเข้าชม", color: "var(--c5)" },
+    shopping:  { label: "ช้อปปิ้ง", color: "var(--c6)" },
+    other:     { label: "อื่น ๆ", color: "var(--c7)" }
+  };
+  var CHK_GROUPS = ["เอกสาร", "เงินและการสื่อสาร", "การเดินทาง", "ของใช้"];
+
+  var IDEAS = {
+    tokyo: { name: "โตเกียว", jp: "東京", spots: [
+      { n: "วัดเซ็นโซจิ อาซากุสะ", j: "浅草寺", d: "วัดเก่าแก่ที่สุดของโตเกียว ถนนนากามิเซะมีขนมและของฝาก ไปเช้าคนน้อย", c: 0, cat: "activity" },
+      { n: "Shibuya Sky", j: "渋谷スカイ", d: "จุดชมวิวดาดฟ้าเหนือสี่แยกชิบุยะ จองรอบพระอาทิตย์ตกล่วงหน้า", c: 2500, cat: "activity" },
+      { n: "ศาลเจ้าเมจิ + ฮาราจูกุ", j: "明治神宮", d: "เดินในป่ากลางเมือง ต่อด้วยถนนทาเคชิตะ", c: 0, cat: "activity" },
+      { n: "teamLab Planets", j: "チームラボ", d: "นิทรรศการศิลปะดิจิทัลที่โทโยสุ ต้องถอดรองเท้าเดินลุยน้ำ", c: 3800, cat: "activity" },
+      { n: "อากิฮาบาระ", j: "秋葉原", d: "ย่านอนิเมะ เกม และเครื่องใช้ไฟฟ้า", c: 0, cat: "shopping" },
+      { n: "ตลาดปลาสึกิจิ (ตลาดนอก)", j: "築地場外市場", d: "ซูชิ ไข่หวาน หอยย่าง ไปก่อน 10 โมง", c: 3000, cat: "food" },
+      { n: "Tokyo Skytree", j: "東京スカイツリー", d: "หอคอยสูง 634 ม. ชั้นชมวิว 350 ม.", c: 3100, cat: "activity" }
+    ]},
+    fuji: { name: "ฟูจิ คาวากุจิโกะ", jp: "河口湖", spots: [
+      { n: "เจดีย์ชูเรโตะ", j: "忠霊塔", d: "เจดีย์แดงคู่ภูเขาไฟฟูจิ เดินขึ้นบันได 398 ขั้น", c: 0, cat: "activity" },
+      { n: "กระเช้าคาจิคาจิยามะ", j: "カチカチ山ロープウェイ", d: "ชมฟูจิและทะเลสาบจากมุมสูง", c: 1000, cat: "activity" },
+      { n: "รถบัสโตเกียว–คาวากุจิโกะ", j: "高速バス", d: "จากชินจูกุราว 2 ชั่วโมง จองที่นั่งล่วงหน้า", c: 2200, cat: "transport" },
+      { n: "ออนเซ็นวิวฟูจิ", j: "温泉", d: "เรียวกังหลายแห่งเปิดให้แช่แบบไปกลับ", c: 1500, cat: "activity" }
+    ]},
+    kyoto: { name: "เกียวโต", jp: "京都", spots: [
+      { n: "ศาลเจ้าฟูชิมิอินาริ", j: "伏見稲荷大社", d: "เส้นทางเสาโทริอิสีแดงนับพัน ไปเช้ามืดเลี่ยงคน", c: 0, cat: "activity" },
+      { n: "ป่าไผ่อาราชิยามะ", j: "嵐山竹林", d: "ต่อด้วยสะพานโทเก็ตสึเกียวและวัดเท็นริวจิ", c: 500, cat: "activity" },
+      { n: "วัดคินคะคุจิ", j: "金閣寺", d: "ศาลาทองสะท้อนผิวน้ำ", c: 500, cat: "activity" },
+      { n: "วัดคิโยมิซุ", j: "清水寺", d: "ระเบียงไม้ชมวิวเมือง เดินต่อซันเนนซากะ", c: 500, cat: "activity" },
+      { n: "ย่านกิออน", j: "祇園", d: "บ้านไม้โบราณ ถนนฮานามิโคจิ ช่วงเย็น", c: 0, cat: "activity" },
+      { n: "ตลาดนิชิกิ", j: "錦市場", d: "ครัวของเกียวโต ของกินเล่นตลอดทาง", c: 2000, cat: "food" }
+    ]},
+    nara: { name: "นารา", jp: "奈良", spots: [
+      { n: "สวนนาราและกวาง", j: "奈良公園", d: "ขนมให้กวาง (ชิกะเซ็มเบ้) ราว 200 เยน", c: 200, cat: "activity" },
+      { n: "วัดโทไดจิ", j: "東大寺", d: "พระพุทธรูปสำริดองค์ใหญ่ในอาคารไม้", c: 800, cat: "activity" },
+      { n: "ศาลเจ้าคาสุงะไทฉะ", j: "春日大社", d: "โคมไฟหินและโคมสำริดนับพัน", c: 700, cat: "activity" }
+    ]},
+    osaka: { name: "โอซาก้า", jp: "大阪", spots: [
+      { n: "โดทงโบริ", j: "道頓堀", d: "ป้ายกูลิโกะ ทาโกยากิ และโอโคโนมิยากิ", c: 2500, cat: "food" },
+      { n: "ปราสาทโอซาก้า", j: "大阪城", d: "ชมพิพิธภัณฑ์ในปราสาทและสวนโดยรอบ", c: 600, cat: "activity" },
+      { n: "Universal Studios Japan", j: "ユニバーサル", d: "ซื้อตั๋วออนไลน์ล่วงหน้า Express Pass ขายหมดเร็ว", c: 9800, cat: "activity" },
+      { n: "ตลาดคุโรมง", j: "黒門市場", d: "ซีฟู้ดย่าง เนื้อวากิว ผลไม้", c: 3000, cat: "food" },
+      { n: "ชินเซไก + ซึเท็นคาคุ", j: "新世界", d: "ย่านเก่าบรรยากาศย้อนยุค คุชิคัตสึ", c: 1500, cat: "food" }
+    ]},
+    hokkaido: { name: "ฮอกไกโด", jp: "北海道", spots: [
+      { n: "โอตารุ คลองและกล่องดนตรี", j: "小樽運河", d: "เมืองท่าเก่า นั่งรถไฟจากซัปโปโร 40 นาที", c: 0, cat: "activity" },
+      { n: "ตลาดนิโจ ซัปโปโร", j: "二条市場", d: "ข้าวหน้าปู ไข่หอยเม่น", c: 3500, cat: "food" },
+      { n: "บิเอะ + ฟูราโนะ", j: "美瑛・富良野", d: "ทุ่งลาเวนเดอร์ ก.ค. และบ่อน้ำสีฟ้า", c: 0, cat: "activity" },
+      { n: "เทศกาลหิมะซัปโปโร", j: "さっぽろ雪まつり", d: "ต้น ก.พ. ประติมากรรมหิมะที่สวนโอโดริ", c: 0, cat: "activity" }
+    ]},
+    fukuoka: { name: "ฟุกุโอกะ", jp: "福岡", spots: [
+      { n: "ยาไตริมน้ำ นากาสุ", j: "中洲屋台", d: "ราเมนทงคตสึและโอเด้งยามค่ำ", c: 1500, cat: "food" },
+      { n: "ศาลเจ้าดาไซฟุ", j: "太宰府天満宮", d: "ขอพรเรื่องการเรียน กินขนมอุเมงาเอะโมจิ", c: 0, cat: "activity" },
+      { n: "ฮิโรชิมะ วันเดย์ทริป", j: "広島", d: "ชินคันเซ็น 1 ชม. อนุสรณ์สันติภาพและเกาะมิยาจิมะ", c: 9000, cat: "transport" }
+    ]}
+  };
+
+  var PHRASES = [
+    ["すみません", "sumimasen", "ขอโทษครับ/ค่ะ (เรียกพนักงานได้)"],
+    ["ありがとうございます", "arigatou gozaimasu", "ขอบคุณครับ/ค่ะ"],
+    ["これをください", "kore o kudasai", "ขออันนี้"],
+    ["いくらですか？", "ikura desu ka?", "ราคาเท่าไหร่"],
+    ["〜はどこですか？", "~ wa doko desu ka?", "... อยู่ที่ไหน"],
+    ["カードで払えますか？", "kaado de haraemasu ka?", "จ่ายด้วยบัตรได้ไหม"],
+    ["お会計お願いします", "okaikei onegaishimasu", "เช็กบิลด้วย"],
+    ["英語のメニューはありますか？", "eigo no menyuu wa arimasu ka?", "มีเมนูภาษาอังกฤษไหม"]
+  ];
+
+  var SEASONS = {
+    1: ["冬", "ฤดูหนาว", "อากาศหนาวจัด ฮอกไกโดหิมะตกหนัก เตรียมเสื้อกันหนาวและรองเท้ากันลื่น ต้นปีร้านบางแห่งปิด 1–3 ม.ค."],
+    2: ["冬", "ฤดูหนาว", "เทศกาลหิมะซัปโปโรต้นเดือน ที่พักซัปโปโรเต็มเร็ว อากาศหนาวที่สุดของปี"],
+    3: ["桜", "ฤดูซากุระ", "ซากุระโตเกียวและเกียวโตมักบานปลาย มี.ค.–ต้น เม.ย. จองที่พักล่วงหน้าหลายเดือน กลางคืนยังหนาว"],
+    4: ["桜", "ฤดูซากุระ", "ต้นเดือนซากุระบานในภูมิภาคคันโตและคันไซ ปลายเดือนเริ่ม Golden Week คนเยอะและราคาสูง"],
+    5: ["新緑", "ใบไม้ผลิ", "Golden Week ช่วง 29 เม.ย.–5 พ.ค. คนญี่ปุ่นเที่ยวกันมาก หลังจากนั้นอากาศดีและคนน้อยลง"],
+    6: ["梅雨", "ฤดูฝน", "ฝนตกบ่อยตั้งแต่ต้น มิ.ย.–กลาง ก.ค. (ยกเว้นฮอกไกโด) พกร่มพับเสมอ"],
+    7: ["夏", "ฤดูร้อน", "ร้อนชื้นมาก ฮอกไกโดทุ่งลาเวนเดอร์บาน มีเทศกาลและดอกไม้ไฟหลายเมือง"],
+    8: ["夏", "ฤดูร้อน", "ร้อนจัดและเริ่มมีไต้ฝุ่น ช่วงโอบ้งกลางเดือนรถไฟและที่พักแน่น"],
+    9: ["台風", "ปลายร้อน", "ฤดูไต้ฝุ่น เช็กพยากรณ์ก่อนบิน และเผื่อแผนสำรองสำหรับวันเที่ยวกลางแจ้ง"],
+    10: ["紅葉", "ใบไม้เปลี่ยนสี", "ใบไม้เปลี่ยนสีเริ่มที่ฮอกไกโดและภูเขาสูง อากาศเย็นสบาย เที่ยวง่ายที่สุดช่วงหนึ่ง"],
+    11: ["紅葉", "ใบไม้เปลี่ยนสี", "เกียวโตและโตเกียวใบไม้แดงสวยราวกลาง–ปลาย พ.ย. วัดดังคนเยอะ ไปให้ถึงก่อนเปิด"],
+    12: ["冬", "ฤดูหนาว", "ไฟประดับ (illumination) ทั่วเมือง หิมะเริ่มตกทางเหนือ ช่วงปีใหม่ร้านและวัดบางแห่งปิด"]
+  };
+
+  // ---------- utils ----------
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parse(s) { var p = String(s || "").split("-").map(Number); return p.length === 3 && p[0] ? new Date(p[0], p[1] - 1, p[2]) : null; }
+  function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function fmtDate(d, opts) { return d.toLocaleDateString("th-TH", opts || { weekday: "short", day: "numeric", month: "short" }); }
+  function yen(n) { return "¥" + Math.round(n || 0).toLocaleString("en-US"); }
+  function baht(n) { return "฿" + Math.round(n || 0).toLocaleString("en-US"); }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function todayIso() { return iso(new Date()); }
+  function normTime(v) {
+    var d = String(v || "").replace(/[^0-9]/g, "");
+    if (!d) return "";
+    if (d.length <= 2) d = d + "00";
+    if (d.length === 3) d = "0" + d;
+    var h = Math.min(23, +d.slice(0, 2)), m = Math.min(59, +d.slice(2, 4));
+    return pad(h) + ":" + pad(m);
+  }
+
+  function dateList() {
+    var s = parse(S.trip.start), e = parse(S.trip.end);
+    if (!s) return [];
+    if (!e || e < s) e = s;
+    var out = [], d = s;
+    while (d <= e && out.length < 31) { out.push(iso(d)); d = addDays(d, 1); }
+    return out;
+  }
+  function day(dt) { if (!S.days[dt]) S.days[dt] = { city: "", items: [] }; return S.days[dt]; }
+
+  // ---------- data ----------
+  function it(time, title, cost, cat, note) { return { id: uid(), time: time, title: title, cost: cost || 0, cat: cat || "activity", note: note || "" }; }
+  function defaultChecklist() {
+    var L = [
+      ["เอกสาร", "พาสปอร์ตอายุเหลือเกิน 6 เดือน"],
+      ["เอกสาร", "ลงทะเบียน Visit Japan Web (QR ตรวจคนเข้าเมืองและศุลกากร)"],
+      ["เอกสาร", "ประกันการเดินทาง"],
+      ["เอกสาร", "สำเนาการจองที่พักและตั๋วเครื่องบิน"],
+      ["เงินและการสื่อสาร", "แลกเงินเยนสด (ร้านเล็ก วัด และตู้กดยังรับแต่เงินสด)"],
+      ["เงินและการสื่อสาร", "บัตรเดบิต/เครดิตสำหรับใช้ต่างประเทศ"],
+      ["เงินและการสื่อสาร", "eSIM หรือ Pocket WiFi"],
+      ["การเดินทาง", "บัตร IC (Suica / PASMO / ICOCA) หรือเพิ่มใน Apple Wallet"],
+      ["การเดินทาง", "เช็กความคุ้มค่า JR Pass / พาสภูมิภาค"],
+      ["การเดินทาง", "จองที่นั่งชินคันเซ็น (ช่องวางกระเป๋าใหญ่ต้องจอง)"],
+      ["การเดินทาง", "ดาวน์โหลดแผนที่ออฟไลน์"],
+      ["ของใช้", "ปลั๊กแปลงขาแบน (Type A ไฟ 100V)"],
+      ["ของใช้", "พาวเวอร์แบงก์ (ห้ามโหลดใต้เครื่อง)"],
+      ["ของใช้", "ถุงใส่ขยะเล็ก ๆ (ถังขยะสาธารณะหายาก)"],
+      ["ของใช้", "รองเท้าเดินสบาย"],
+      ["ของใช้", "ยาประจำตัว"]
+    ];
+    return L.map(function (x) { return { id: uid(), group: x[0], text: x[1], done: false }; });
+  }
+  function sample() {
+    var s = new Date(2027, 2, 28);
+    var D = function (i) { return iso(addDays(s, i)); };
+    var days = {};
+    days[D(0)] = { city: "โตเกียว", items: [
+      it("07:30", "ถึงสนามบินฮาเนดะ ผ่านตม. ด้วย QR Visit Japan Web", 0, "transport"),
+      it("09:00", "รถไฟไปชินจูกุ ฝากกระเป๋าที่โรงแรม", 500, "transport"),
+      it("13:00", "ชินจูกุเกียวเอ็น ชมซากุระ", 500, "activity", "เปิด 9:00–17:30 ห้ามนำแอลกอฮอล์เข้า"),
+      it("18:30", "อิซากายะที่โอโมอิเดะโยโคโจ", 3500, "food")
+    ]};
+    days[D(1)] = { city: "โตเกียว", items: [
+      it("08:00", "วัดเซ็นโซจิ อาซากุสะ", 0, "activity"),
+      it("11:00", "ล่องเรือแม่น้ำสุมิดะ ไปฮามะริคิว", 1000, "transport"),
+      it("13:00", "ตลาดปลาสึกิจิ (ตลาดนอก)", 3000, "food"),
+      it("16:00", "teamLab Planets", 3800, "activity", "จองรอบล่วงหน้า"),
+      it("19:30", "อากิฮาบาระ", 0, "shopping")
+    ]};
+    days[D(2)] = { city: "โตเกียว", items: [
+      it("09:00", "ศาลเจ้าเมจิ + ฮาราจูกุ", 0, "activity"),
+      it("12:30", "ราเมนที่ชิบุยะ", 1200, "food"),
+      it("17:00", "Shibuya Sky รอบพระอาทิตย์ตก", 2500, "activity", "ซื้อตั๋วออนไลน์ 4 สัปดาห์ก่อน")
+    ]};
+    days[D(3)] = { city: "เกียวโต", items: [
+      it("09:00", "ชินคันเซ็นโนโซมิ โตเกียว → เกียวโต", 14170, "transport", "ราว 2 ชม. 15 นาที"),
+      it("13:00", "ศาลเจ้าฟูชิมิอินาริ", 0, "activity"),
+      it("17:30", "ย่านกิออน ถนนฮานามิโคจิ", 0, "activity"),
+      it("19:00", "มื้อเย็นที่ปงโตะโจ", 4000, "food")
+    ]};
+    days[D(4)] = { city: "เกียวโต", items: [
+      it("07:30", "ป่าไผ่อาราชิยามะ", 500, "activity"),
+      it("11:30", "วัดคินคะคุจิ", 500, "activity"),
+      it("14:00", "ตลาดนิชิกิ", 2000, "food"),
+      it("16:00", "วัดคิโยมิซุ + ซันเนนซากะ", 500, "activity")
+    ]};
+    days[D(5)] = { city: "นารา → โอซาก้า", items: [
+      it("09:00", "รถไฟคินเท็ตสึไปนารา", 760, "transport"),
+      it("10:00", "สวนนาราและกวาง + วัดโทไดจิ", 1000, "activity"),
+      it("15:00", "ย้ายไปโอซาก้า เช็กอินที่นัมบะ", 680, "transport"),
+      it("18:00", "โดทงโบริ", 2500, "food")
+    ]};
+    days[D(6)] = { city: "โอซาก้า", items: [
+      it("09:00", "ตลาดคุโรมง", 3000, "food"),
+      it("11:00", "ซื้อของฝากที่ชินไซบาชิ", 15000, "shopping"),
+      it("15:00", "Nankai Rapi:t ไปสนามบินคันไซ", 1450, "transport"),
+      it("18:00", "บินกลับกรุงเทพฯ", 0, "flight")
+    ]};
+    var chk = defaultChecklist();
+    chk[0].done = true; chk[2].done = true;
+    return {
+      sample: true,
+      trip: { name: "ซากุระ โตเกียว–เกียวโต–โอซาก้า", start: D(0), end: D(6), people: 2, budget: 120000, rate: 0.235 },
+      days: days,
+      expenses: [
+        { id: uid(), cat: "flight", title: "ไป BKK→HND กลับ KIX→BKK 2 คน", amount: 34000, cur: "THB" },
+        { id: uid(), cat: "hotel", title: "ชินจูกุ 3 คืน", amount: 66000, cur: "JPY" },
+        { id: uid(), cat: "hotel", title: "เกียวโต 2 คืน", amount: 42000, cur: "JPY" },
+        { id: uid(), cat: "hotel", title: "นัมบะ โอซาก้า 1 คืน", amount: 16000, cur: "JPY" },
+        { id: uid(), cat: "transport", title: "เติม Suica สำรอง", amount: 6000, cur: "JPY" },
+        { id: uid(), cat: "other", title: "eSIM 8 วัน 2 คน", amount: 900, cur: "THB" }
+      ],
+      checklist: chk
+    };
+  }
+  function blank() {
+    var s = addDays(new Date(), 60);
+    return {
+      sample: false,
+      trip: { name: "ทริปญี่ปุ่นของฉัน", start: iso(s), end: iso(addDays(s, 5)), people: 2, budget: 80000, rate: 0.235 },
+      days: {}, expenses: [], checklist: defaultChecklist()
+    };
+  }
+  function valid(o) { return o && typeof o === "object" && o.trip && o.days && Array.isArray(o.expenses) && Array.isArray(o.checklist); }
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (valid(o)) return o; } } catch (e) {}
+    return sample();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function touched() { if (S.sample) { S.sample = false; $("sampleBanner").hidden = true; } save(); }
+
+  var S = load();
+  var $ = function (id) { return document.getElementById(id); };
+  var toastTimer;
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200); }
+
+  // ---------- totals ----------
+  function totals() {
+    var byCat = {}; Object.keys(CATS).forEach(function (k) { byCat[k] = 0; });
+    var rate = num(S.trip.rate) || 0.235;
+    var dates = dateList();
+    dates.forEach(function (dt) { (S.days[dt] ? S.days[dt].items : []).forEach(function (i) { byCat[i.cat in byCat ? i.cat : "other"] += num(i.cost) * Math.max(1, num(S.trip.people)); }); });
+    S.expenses.forEach(function (e) { var j = e.cur === "THB" ? num(e.amount) / rate : num(e.amount); byCat[e.cat in byCat ? e.cat : "other"] += j; });
+    var jpy = 0; Object.keys(byCat).forEach(function (k) { jpy += byCat[k]; });
+    return { byCat: byCat, jpy: jpy, thb: jpy * rate, rate: rate };
+  }
+
+  // ---------- header ----------
+  function renderHeader() {
+    $("tripTitle").textContent = S.trip.name || "ทริปญี่ปุ่น";
+    var s = parse(S.trip.start), e = parse(S.trip.end) || s;
+    var n = dateList().length;
+    $("tripDates").textContent = s ? fmtDate(s, { day: "numeric", month: "short" }) + " – " + fmtDate(e, { day: "numeric", month: "short", year: "numeric" }) + " · " + n + " วัน " + Math.max(0, n - 1) + " คืน · " + (S.trip.people || 1) + " คน" : "ยังไม่ได้ตั้งวันเดินทาง";
+    var c = $("countdown"); c.classList.remove("live");
+    if (s) {
+      var t = parse(todayIso());
+      var diff = Math.round((s - t) / 86400000), endDiff = Math.round((e - t) / 86400000);
+      if (diff > 0) c.innerHTML = '<div class="big">' + diff + '</div><div class="lbl">วันก่อนออกเดินทาง</div>';
+      else if (endDiff >= 0) { c.classList.add("live"); c.innerHTML = '<div class="big">' + (1 - diff) + '/' + n + '</div><div class="lbl">กำลังเที่ยวอยู่</div>'; }
+      else c.innerHTML = '<div class="big">✓</div><div class="lbl">ทริปจบแล้ว</div>';
+      var m = s.getMonth() + 1, se = SEASONS[m];
+      $("season").innerHTML = '<span class="tag">' + se[0] + '</span><div><b>เดือน' + fmtDate(s, { month: "long" }) + ' · ' + se[1] + '</b><br>' + esc(se[2]) + '</div>';
+      $("season").hidden = false;
+    } else { c.innerHTML = ""; $("season").hidden = true; }
+    $("sampleBanner").hidden = !S.sample;
+    var T = totals();
+    $("navSum").textContent = "รวม " + baht(T.thb) + " / งบ " + baht(S.trip.budget);
+  }
+
+  function renderSettings() {
+    $("s-name").value = S.trip.name || "";
+    $("s-start").value = S.trip.start || "";
+    $("s-end").value = S.trip.end || "";
+    $("s-people").value = S.trip.people || 1;
+    $("s-budget").value = S.trip.budget || 0;
+    $("s-rate").value = S.trip.rate || 0.235;
+  }
+
+  // ---------- plan ----------
+  function catOptions(sel) {
+    return Object.keys(CATS).map(function (k) { return '<option value="' + k + '"' + (k === sel ? " selected" : "") + ">" + CATS[k].label + "</option>"; }).join("");
+  }
+  function mapUrl(q, city) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q + (city ? " " + city : "") + " Japan"); }
+  function sortItems(items) { items.sort(function (a, b) { return (a.time || "99:99").localeCompare(b.time || "99:99"); }); }
+  function dayHtml(dt, idx) {
+    var d = day(dt), date = parse(dt), isToday = dt === todayIso();
+    sortItems(d.items);
+    var sum = d.items.reduce(function (a, i) { return a + num(i.cost); }, 0);
+    var people = Math.max(1, num(S.trip.people));
+    var rows = d.items.map(function (i) {
+      return '<li data-id="' + i.id + '">' +
+        '<input class="t" type="text" inputmode="numeric" maxlength="5" placeholder="--:--" data-f="time" value="' + esc(i.time) + '" aria-label="เวลา">' +
+        '<div style="min-width:0"><input class="ti" data-f="title" value="' + esc(i.title) + '" aria-label="กิจกรรม">' +
+        '<input class="no" data-f="note" value="' + esc(i.note) + '" placeholder="+ โน้ต" aria-label="โน้ต"></div>' +
+        '<div class="ca-wrap"><select class="ca" data-f="cat" aria-label="หมวด">' + catOptions(i.cat) + '</select></div>' +
+        '<div class="cost-wrap"><input class="co" type="number" min="0" step="10" data-f="cost" value="' + (num(i.cost) || "") + '" placeholder="0" aria-label="ค่าใช้จ่ายต่อคน (เยน)"></div>' +
+        '<div class="acts"><a href="' + mapUrl(i.title, d.city) + '" target="_blank" rel="noopener" title="เปิดใน Google Maps">แผนที่</a>' +
+        '<button class="icon-btn" type="button" data-act="del" aria-label="ลบ ' + esc(i.title) + '">×</button></div>' +
+        '</li>';
+    }).join("");
+    return '<article class="day' + (isToday ? " today" : "") + '" data-date="' + dt + '" id="d-' + dt + '">' +
+      '<div class="day-head"><div class="day-no"><small>Day</small>' + (idx + 1) + '</div>' +
+      '<div class="day-meta"><div class="day-date">' + fmtDate(date, { weekday: "long", day: "numeric", month: "long" }) + (isToday ? '<span class="tdy">วันนี้</span>' : "") + '</div>' +
+      '<input class="city-inp" data-f="city" list="cityList" value="' + esc(d.city) + '" placeholder="เมือง / ที่พักคืนนี้" aria-label="เมือง"></div>' +
+      '<div class="day-total">ต่อคน<span class="num">' + yen(sum) + '</span>' + (people > 1 ? '<span>' + people + ' คน ≈ ' + baht(sum * people * (num(S.trip.rate) || 0.235)) + '</span>' : '<span>≈ ' + baht(sum * (num(S.trip.rate) || 0.235)) + '</span>') + '</div></div>' +
+      (rows ? '<ol class="items">' + rows + '</ol>' : '<div class="empty-day">ยังไม่มีกิจกรรม เพิ่มด้านล่าง หรือเลือกจากแท็บไอเดียที่เที่ยว</div>') +
+      '<form class="add" data-date="' + dt + '"><input class="inp" type="text" inputmode="numeric" maxlength="5" placeholder="เวลา" name="time" aria-label="เวลา">' +
+      '<input class="inp" name="title" placeholder="เพิ่มกิจกรรม เช่น ช้อปที่ชินไซบาชิ" required aria-label="กิจกรรมใหม่">' +
+      '<input class="inp add-cost" type="number" name="cost" min="0" step="10" placeholder="¥ ต่อคน" aria-label="ค่าใช้จ่ายต่อคน (เยน)">' +
+      '<button class="btn primary">เพิ่ม</button></form>' +
+      '</article>';
+  }
+  function renderPlan() {
+    var dates = dateList();
+    if (!dates.length) { $("days").innerHTML = '<div class="panel">ตั้งวันออกเดินทางในส่วน "ตั้งค่าทริป" ด้านบนก่อน แล้ววันต่าง ๆ จะขึ้นที่นี่</div>'; return; }
+    var cities = {}; Object.keys(IDEAS).forEach(function (k) { cities[IDEAS[k].name] = 1; });
+    $("days").innerHTML = dates.map(dayHtml).join("") +
+      '<datalist id="cityList">' + Object.keys(cities).concat(["ซัปโปโร", "ฮิโรชิมะ", "คานาซาวะ", "โยโกฮาม่า", "คามาคุระ", "นิกโก้"]).map(function (c) { return '<option value="' + esc(c) + '">'; }).join("") + '</datalist>';
+  }
+  function rerenderDay(dt) {
+    var el = $("d-" + dt); if (!el) return;
+    var idx = dateList().indexOf(dt);
+    var tmp = document.createElement("div"); tmp.innerHTML = dayHtml(dt, idx);
+    el.replaceWith(tmp.firstChild);
+  }
+
+  $("days").addEventListener("change", function (ev) {
+    var f = ev.target.getAttribute("data-f"); if (!f) return;
+    var art = ev.target.closest(".day"); if (!art) return;
+    var dt = art.getAttribute("data-date"), d = day(dt);
+    if (f === "city") { d.city = ev.target.value.trim(); touched(); return; }
+    var li = ev.target.closest("li"); if (!li) return;
+    var item = d.items.find(function (i) { return i.id === li.getAttribute("data-id"); }); if (!item) return;
+    item[f] = f === "cost" ? num(ev.target.value) : f === "time" ? normTime(ev.target.value) : ev.target.value;
+    touched();
+    if (f === "time" || f === "cost") rerenderDay(dt);
+    renderHeader(); renderBudget();
+  });
+  $("days").addEventListener("click", function (ev) {
+    var b = ev.target.closest('[data-act="del"]'); if (!b) return;
+    var dt = b.closest(".day").getAttribute("data-date"), id = b.closest("li").getAttribute("data-id");
+    var d = day(dt); var idx = d.items.findIndex(function (i) { return i.id === id; });
+    if (idx < 0) return;
+    var removed = d.items.splice(idx, 1)[0];
+    touched(); rerenderDay(dt); renderHeader(); renderBudget();
+    toast("ลบ \"" + removed.title + "\" แล้ว");
+  });
+  $("days").addEventListener("submit", function (ev) {
+    var form = ev.target.closest("form.add"); if (!form) return;
+    ev.preventDefault();
+    var dt = form.getAttribute("data-date");
+    var title = form.elements.namedItem("title").value.trim(); if (!title) return;
+    day(dt).items.push(it(normTime(form.elements.namedItem("time").value), title, num(form.elements.namedItem("cost").value), "activity"));
+    touched(); rerenderDay(dt); renderHeader(); renderBudget();
+    var f2 = $("d-" + dt).querySelector("form.add input[name=title]"); if (f2) f2.focus();
+  });
+
+  // ---------- budget ----------
+  function renderBudget() {
+    var T = totals(), budget = num(S.trip.budget), people = Math.max(1, num(S.trip.people));
+    var left = budget - T.thb, pct = budget ? Math.min(100, T.thb / budget * 100) : 0, over = budget && T.thb > budget;
+    $("stats").innerHTML =
+      '<div class="stat' + (over ? " over" : "") + '"><div class="k">ค่าใช้จ่ายที่วางแผนไว้</div><div class="v">' + baht(T.thb) + '</div><div class="s">' + yen(T.jpy) + '</div>' +
+        '<div class="meter' + (over ? " over" : "") + '"><span style="width:' + pct.toFixed(1) + '%"></span></div></div>' +
+      '<div class="stat"><div class="k">งบที่ตั้งไว้</div><div class="v">' + baht(budget) + '</div><div class="s">' + (budget ? pct.toFixed(0) + "% ใช้ไปแล้ว" : "ยังไม่ได้ตั้งงบ") + '</div></div>' +
+      '<div class="stat ' + (left < 0 ? "over" : "ok") + '"><div class="k">' + (left < 0 ? "เกินงบ" : "เหลือ") + '</div><div class="v">' + baht(Math.abs(left)) + '</div><div class="s">' + yen(Math.abs(left) / T.rate) + '</div></div>' +
+      '<div class="stat"><div class="k">เฉลี่ยต่อคน</div><div class="v">' + baht(T.thb / people) + '</div><div class="s">' + people + ' คน</div></div>';
+    var max = 0; Object.keys(T.byCat).forEach(function (k) { if (T.byCat[k] > max) max = T.byCat[k]; });
+    $("bars").innerHTML = Object.keys(CATS).map(function (k) {
+      var v = T.byCat[k];
+      return '<div class="bar-row"><span><span class="dot" style="background:' + CATS[k].color + '"></span>' + CATS[k].label + '</span>' +
+        '<div class="bar-track"><span style="width:' + (max ? (v / max * 100).toFixed(1) : 0) + '%;background:' + CATS[k].color + '"></span></div>' +
+        '<span class="num">' + baht(v * T.rate) + '</span></div>';
+    }).join("") + '<p class="hint">ค่าใช้จ่ายในแผนรายวันเป็นราคาต่อคน คูณจำนวนคนให้แล้ว</p>';
+    $("expRows").innerHTML = S.expenses.length ? S.expenses.map(function (e) {
+      var thb = e.cur === "THB" ? num(e.amount) : num(e.amount) * T.rate;
+      return '<tr data-id="' + e.id + '"><td><span class="dot" style="background:' + (CATS[e.cat] || CATS.other).color + '"></span>' + (CATS[e.cat] || CATS.other).label + '</td>' +
+        '<td>' + esc(e.title) + '</td><td class="r num">' + (e.cur === "THB" ? baht(e.amount) : yen(e.amount)) + '</td><td class="r num">' + baht(thb) + '</td>' +
+        '<td class="r"><button class="icon-btn" type="button" data-act="del-exp" aria-label="ลบ ' + esc(e.title) + '">×</button></td></tr>';
+    }).join("") : '<tr><td colspan="5" class="muted">ยังไม่มีรายการ เพิ่มค่าตั๋วเครื่องบินหรือที่พักได้ด้านล่าง</td></tr>';
+    $("rateHint").textContent = "อัตราที่ใช้: ¥100 = ฿" + (T.rate * 100).toFixed(2) + " (แก้ได้ในตั้งค่าทริป) · ตรวจเรตจริงก่อนแลกเงิน";
+    convert("jpy");
+  }
+  $("expRows").addEventListener("click", function (ev) {
+    var b = ev.target.closest('[data-act="del-exp"]'); if (!b) return;
+    var id = b.closest("tr").getAttribute("data-id");
+    S.expenses = S.expenses.filter(function (e) { return e.id !== id; });
+    touched(); renderBudget(); renderHeader();
+  });
+  $("expForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var title = $("exp-title").value.trim(), amt = num($("exp-amt").value);
+    if (!title) return;
+    S.expenses.push({ id: uid(), cat: $("exp-cat").value, title: title, amount: amt, cur: $("exp-cur").value });
+    $("exp-title").value = ""; $("exp-amt").value = "";
+    touched(); renderBudget(); renderHeader(); toast("เพิ่มค่าใช้จ่ายแล้ว");
+  });
+  function convert(from) {
+    var r = num(S.trip.rate) || 0.235;
+    if (from === "jpy") $("cv-thb").value = (num($("cv-jpy").value) * r).toFixed(2);
+    else $("cv-jpy").value = Math.round(num($("cv-thb").value) / r);
+  }
+  $("cv-jpy").addEventListener("input", function () { convert("jpy"); });
+  $("cv-thb").addEventListener("input", function () { convert("thb"); });
+
+  // ---------- checklist ----------
+  function renderChecklist() {
+    var done = S.checklist.filter(function (c) { return c.done; }).length, all = S.checklist.length;
+    $("chkProgress").innerHTML = '<span class="num">' + done + "/" + all + '</span><div class="meter"><span style="width:' + (all ? done / all * 100 : 0) + '%;background:var(--matcha)"></span></div>';
+    var groups = CHK_GROUPS.slice();
+    S.checklist.forEach(function (c) { if (groups.indexOf(c.group) < 0) groups.push(c.group); });
+    $("chkGroups").innerHTML = groups.map(function (g) {
+      var items = S.checklist.filter(function (c) { return c.group === g; });
+      if (!items.length) return "";
+      return '<div class="panel"><h3>' + esc(g) + '</h3><ul>' + items.map(function (c) {
+        return '<li class="' + (c.done ? "done" : "") + '" data-id="' + c.id + '"><input type="checkbox" id="c-' + c.id + '"' + (c.done ? " checked" : "") + '>' +
+          '<label for="c-' + c.id + '">' + esc(c.text) + '</label><button class="icon-btn" type="button" data-act="del-chk" aria-label="ลบ ' + esc(c.text) + '">×</button></li>';
+      }).join("") + '</ul></div>';
+    }).join("");
+  }
+  $("chkGroups").addEventListener("change", function (ev) {
+    if (ev.target.type !== "checkbox") return;
+    var id = ev.target.closest("li").getAttribute("data-id");
+    var c = S.checklist.find(function (x) { return x.id === id; }); if (!c) return;
+    c.done = ev.target.checked; touched(); renderChecklist();
+  });
+  $("chkGroups").addEventListener("click", function (ev) {
+    var b = ev.target.closest('[data-act="del-chk"]'); if (!b) return;
+    var id = b.closest("li").getAttribute("data-id");
+    S.checklist = S.checklist.filter(function (c) { return c.id !== id; }); touched(); renderChecklist();
+  });
+  $("chkForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var t = $("chk-text").value.trim(); if (!t) return;
+    S.checklist.push({ id: uid(), group: $("chk-group").value, text: t, done: false });
+    $("chk-text").value = ""; touched(); renderChecklist();
+  });
+
+  // ---------- ideas ----------
+  var ideaCity = "tokyo";
+  function renderIdeas() {
+    $("cityChips").innerHTML = Object.keys(IDEAS).map(function (k) {
+      return '<button class="chip" type="button" data-city="' + k + '" aria-pressed="' + (k === ideaCity) + '">' + IDEAS[k].name + '<span class="jp">' + IDEAS[k].jp + '</span></button>';
+    }).join("");
+    var dates = dateList(), cur = $("targetDay").value;
+    $("targetDay").innerHTML = dates.map(function (dt, i) {
+      var d = S.days[dt];
+      return '<option value="' + dt + '">วันที่ ' + (i + 1) + " · " + fmtDate(parse(dt), { day: "numeric", month: "short" }) + (d && d.city ? " · " + esc(d.city) : "") + "</option>";
+    }).join("");
+    if (cur && dates.indexOf(cur) >= 0) $("targetDay").value = cur;
+    var planned = {};
+    dates.forEach(function (dt) { (S.days[dt] ? S.days[dt].items : []).forEach(function (i) { planned[i.title] = 1; }); });
+    $("ideaCards").innerHTML = IDEAS[ideaCity].spots.map(function (s, i) {
+      return '<div class="card"><span class="jpn">' + s.j + '</span><h3>' + esc(s.n) + '</h3><p>' + esc(s.d) + '</p>' +
+        '<div class="foot"><span class="num">' + (s.c ? "≈ " + yen(s.c) : "ฟรี") + '</span>' +
+        (planned[s.n] ? '<span class="added">อยู่ในแผนแล้ว</span>' : '<button class="btn" type="button" data-idea="' + i + '"' + (dates.length ? "" : " disabled") + '>+ เพิ่มลงแผน</button>') + '</div></div>';
+    }).join("");
+  }
+  $("cityChips").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-city]"); if (!b) return;
+    ideaCity = b.getAttribute("data-city"); renderIdeas();
+  });
+  $("ideaCards").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-idea]"); if (!b) return;
+    var s = IDEAS[ideaCity].spots[+b.getAttribute("data-idea")], dt = $("targetDay").value; if (!dt) return;
+    var d = day(dt);
+    d.items.push(it("", s.n, s.c, s.cat));
+    if (!d.city) d.city = IDEAS[ideaCity].name;
+    touched(); renderPlan(); renderIdeas(); renderHeader(); renderBudget();
+    toast("เพิ่ม " + s.n + " ลงวันที่ " + (dateList().indexOf(dt) + 1) + " แล้ว");
+  });
+  $("phrases").innerHTML = PHRASES.map(function (p) { return '<div class="phrase"><div class="jp">' + p[0] + '</div><div class="ro">' + p[1] + '</div><div class="th">' + p[2] + '</div></div>'; }).join("");
+
+  // ---------- settings ----------
+  [["s-name", "name"], ["s-start", "start"], ["s-end", "end"], ["s-people", "people"], ["s-budget", "budget"], ["s-rate", "rate"]].forEach(function (p) {
+    $(p[0]).addEventListener("change", function (ev) {
+      var v = ev.target.value;
+      if (p[1] === "people") v = Math.max(1, Math.round(num(v)));
+      if (p[1] === "budget" || p[1] === "rate") v = num(v);
+      if (p[1] === "start" && S.trip.end && v > S.trip.end) { var len = dateList().length; S.trip.end = iso(addDays(parse(v), Math.max(0, len - 1))); }
+      S.trip[p[1]] = v; touched(); renderAll();
+    });
+  });
+  $("copyJson").addEventListener("click", function () {
+    var txt = JSON.stringify(S);
+    var fallback = function () { $("importBox").value = txt; $("importBox").select(); toast("เลือกข้อความไว้แล้ว กด Ctrl/Cmd+C เพื่อคัดลอก"); };
+    try { navigator.clipboard.writeText(txt).then(function () { toast("คัดลอกข้อมูลทริปแล้ว"); }, fallback); } catch (e) { fallback(); }
+  });
+  $("importJson").addEventListener("click", function () {
+    try { var o = JSON.parse($("importBox").value); if (!valid(o)) throw 0; S = o; S.sample = false; save(); renderAll(); $("importBox").value = ""; toast("นำเข้าข้อมูลแล้ว"); }
+    catch (e) { toast("อ่านข้อมูลไม่ได้ ตรวจว่าวาง JSON ที่คัดลอกจากหน้านี้ครบทั้งหมด"); }
+  });
+  $("loadSample").addEventListener("click", function () { S = sample(); save(); renderAll(); toast("โหลดแผนตัวอย่างแล้ว"); });
+  var armTimer;
+  $("resetAll").addEventListener("click", function (ev) {
+    var b = ev.currentTarget;
+    if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "กดอีกครั้งเพื่อยืนยันการล้าง"; armTimer = setTimeout(function () { b.classList.remove("armed"); b.textContent = "ล้างข้อมูลทั้งหมด"; }, 4000); return; }
+    clearTimeout(armTimer); b.classList.remove("armed"); b.textContent = "ล้างข้อมูลทั้งหมด";
+    S = blank(); save(); renderAll(); toast("ล้างข้อมูลแล้ว เริ่มวางแผนใหม่ได้เลย");
+  });
+  $("startBlank").addEventListener("click", function () { S = blank(); save(); renderAll(); $("settings").open = true; $("s-name").focus(); });
+
+  // ---------- tabs ----------
+  var TABS = ["plan", "budget", "checklist", "ideas"];
+  function showTab() {
+    var h = (location.hash || "").slice(1); if (TABS.indexOf(h) < 0) h = "plan";
+    TABS.forEach(function (t) { $("view-" + t).hidden = t !== h; });
+    document.querySelectorAll("nav.tabs a").forEach(function (a) { if (a.getAttribute("data-tab") === h) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  }
+  window.addEventListener("hashchange", showTab);
+
+  function renderAll() { renderHeader(); renderSettings(); renderPlan(); renderBudget(); renderChecklist(); renderIdeas(); }
+
+  $("exp-cat").innerHTML = catOptions("hotel");
+  $("chk-group").innerHTML = CHK_GROUPS.map(function (g) { return "<option>" + g + "</option>"; }).join("");
+  renderAll(); showTab();
+})();
+</script>
+</body>
+</html>
